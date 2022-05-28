@@ -87,3 +87,36 @@ class MiniMLP(nn.Sequential):
                     activation()
                 )
             
+            
+            
+class Miniconv_mesh(nn.Module):
+
+    def __init__(
+            self,
+            layer_sizes,
+
+            momentum=0.1
+    ):
+        super(Miniconv_mesh, self).__init__()
+
+        self.out = nn.Sequential(
+            nn.Conv1d(layer_sizes[0], layer_sizes[1], kernel_size=1,  padding=0,bias=False),
+            nn.BatchNorm1d( layer_sizes[1], momentum=momentum),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Dropout(0.1),
+            nn.Conv1d(layer_sizes[1],layer_sizes[2], kernel_size=1, padding=0,  bias=False),
+            nn.BatchNorm1d(layer_sizes[2], momentum=momentum),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Dropout(0.1),
+            nn.Conv1d(layer_sizes[2], layer_sizes[3], kernel_size=3, padding=1,  bias=False),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Dropout(0.1),
+        )
+    def forward(self,x):
+        b,q,k,f=x.shape
+        x=torch.flatten(x,1,2)
+        x=torch.transpose(x,1,2)
+        x=self.out(x)
+        x=torch.transpose(x,1,2)
+        x=x.view(b,q,k,-1)
+        return x
